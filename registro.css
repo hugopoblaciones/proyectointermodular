@@ -1,0 +1,98 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.form-container {
+    background: linear-gradient(145deg, #1e2746 0%, #252d4a 100%);
+    padding: 50px;
+    border-radius: 20px;
+    width: 400px;
+    text-align: center;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.form-container h2 {
+    margin-bottom: 10px;
+    color: white;
+    font-size: 32px;
+    font-weight: 700;
+}
+
+.form-container .subtitle {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 14px;
+    margin-bottom: 35px;
+}
+
+form { display: flex; flex-direction: column; gap: 20px; }
+
+.input-group { position: relative; }
+
+.input-group input {
+    width: 100%;
+    padding: 16px 20px;
+    padding-left: 50px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    color: white;
+    font-size: 15px;
+    font-family: 'Poppins', sans-serif;
+}
+
+.input-group input::placeholder { color: rgba(255, 255, 255, 0.4); }
+.input-group input:focus { outline: none; border-color: #4ecdc4; background: rgba(255, 255, 255, 0.12); }
+
+.input-group .icon-input {
+    position: absolute;
+    left: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    color: rgba(255, 255, 255, 0.4);
+}
+
+button {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, #4ecdc4 0%, #45b7d1 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    font-family: 'Poppins', sans-serif;
+    box-shadow: 0 8px 20px rgba(78, 205, 196, 0.4);
+    margin-top: 10px;
+}
+
+.form-container p {
+    margin-top: 30px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 14px;
+}
+
+.form-container p a {
+    color: #4ecdc4;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.error { color: #ff6b6b; margin: 10px 0; font-size: 14px; }
+.success { color: #4ecdc4; margin: 10px 0; font-size: 14px; }
+
+@media (max-width: 480px) {
+    .form-container { width: 90%; padding: 35px 25px; }
+}
