@@ -46,7 +46,7 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <title>Iniciar sesión</title>
-    <link rel="stylesheet" href="login.css">
+    <link rel="stylesheet" href="login.css?v=<?= filemtime('login.css') ?>">
 </head>
 <body>
 <div class="form-container">

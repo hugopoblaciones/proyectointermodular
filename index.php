@@ -1,6 +1,36 @@
 <?php
 session_start();
 $usuario_logueado = isset($_SESSION['usuario_id']);
+
+$contact_errors  = [];
+$contact_success = false;
+$contact_values  = ['nombre' => '', 'email' => '', 'mensaje' => ''];
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['form'] ?? '') === 'contacto') {
+    $nombre  = trim($_POST['contacto_nombre']  ?? '');
+    $email   = trim($_POST['contacto_email']   ?? '');
+    $mensaje = trim($_POST['contacto_mensaje'] ?? '');
+
+    if (empty($nombre))
+        $contact_errors['nombre'] = 'El nombre es obligatorio.';
+
+    if (empty($email))
+        $contact_errors['email'] = 'El email es obligatorio.';
+    elseif (!filter_var($email, FILTER_VALIDATE_EMAIL))
+        $contact_errors['email'] = 'Introduce un email válido.';
+
+    if (empty($mensaje))
+        $contact_errors['mensaje'] = 'El mensaje no puede estar vacío.';
+    elseif (strlen($mensaje) < 10)
+        $contact_errors['mensaje'] = 'El mensaje debe tener al menos 10 caracteres.';
+
+    $contact_values = compact('nombre', 'email', 'mensaje');
+
+    if (empty($contact_errors)) {
+        $contact_success = true;
+        $contact_values  = ['nombre' => '', 'email' => '', 'mensaje' => ''];
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -8,7 +38,7 @@ $usuario_logueado = isset($_SESSION['usuario_id']);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Automóviles de Barcelona</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=<?= filemtime('styles.css') ?>">
 </head>
 <body>
     <!-- Header -->
@@ -17,6 +47,7 @@ $usuario_logueado = isset($_SESSION['usuario_id']);
             <div class="header-buttons">
                 <?php if ($usuario_logueado): ?>
                     <span class="usuario-info"><?= htmlspecialchars($_SESSION['usuario_nombre']) ?></span>
+                    <a href="dashboard.php" class="btn-header">Panel de gestión</a>
                     <a href="logout.php" class="btn-header">Cerrar sesión</a>
                 <?php else: ?>
                     <a href="registro.php" class="btn-header">Registrar</a>
@@ -83,13 +114,62 @@ $usuario_logueado = isset($_SESSION['usuario_id']);
     </section>
 
     <!-- Contacto -->
-    <section class="contacto">
+    <section class="contacto" id="contacto">
         <div class="container">
             <h2>Contacto</h2>
             <div class="contacto-grid">
                 <div class="contacto-item"><div><h3>Teléfono</h3><p>+34 638 35 98 67</p></div></div>
                 <div class="contacto-item"><div><h3>Dirección</h3><p>Carrer de Camil Fabra</p></div></div>
                 <div class="contacto-item"><div><h3>Email</h3><p>AutomovilBarcelona@gmail.com</p></div></div>
+            </div>
+
+            <div class="contacto-form-wrap">
+                <h3>Envíanos un mensaje</h3>
+
+                <?php if ($contact_success): ?>
+                <div class="contacto-alert success">
+                    ¡Mensaje enviado correctamente! Nos pondremos en contacto contigo pronto.
+                </div>
+                <?php else: ?>
+
+                <form method="POST" action="#contacto" novalidate>
+                    <input type="hidden" name="form" value="contacto">
+                    <div class="contacto-form-grid">
+
+                        <div class="contacto-form-group">
+                            <label>Nombre *</label>
+                            <input type="text" name="contacto_nombre"
+                                   value="<?= htmlspecialchars($contact_values['nombre']) ?>"
+                                   placeholder="Tu nombre completo">
+                            <?php if (isset($contact_errors['nombre'])): ?>
+                            <span class="contacto-error"><?= htmlspecialchars($contact_errors['nombre']) ?></span>
+                            <?php endif; ?>
+                        </div>
+
+                        <div class="contacto-form-group">
+                            <label>Email *</label>
+                            <input type="email" name="contacto_email"
+                                   value="<?= htmlspecialchars($contact_values['email']) ?>"
+                                   placeholder="tu@email.com">
+                            <?php if (isset($contact_errors['email'])): ?>
+                            <span class="contacto-error"><?= htmlspecialchars($contact_errors['email']) ?></span>
+                            <?php endif; ?>
+                        </div>
+
+                        <div class="contacto-form-group full">
+                            <label>Mensaje *</label>
+                            <textarea name="contacto_mensaje"
+                                      placeholder="Escribe tu consulta aquí..."><?= htmlspecialchars($contact_values['mensaje']) ?></textarea>
+                            <?php if (isset($contact_errors['mensaje'])): ?>
+                            <span class="contacto-error"><?= htmlspecialchars($contact_errors['mensaje']) ?></span>
+                            <?php endif; ?>
+                        </div>
+
+                    </div>
+                    <button type="submit" class="btn-contacto">Enviar mensaje</button>
+                </form>
+
+                <?php endif; ?>
             </div>
         </div>
     </section>

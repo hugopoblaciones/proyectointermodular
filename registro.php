@@ -52,7 +52,7 @@ $conn->close();
 <head>
     <meta charset="UTF-8">
     <title>Registro</title>
-    <link rel="stylesheet" href="registro.css">
+    <link rel="stylesheet" href="registro.css?v=<?= filemtime('registro.css') ?>">
 </head>
 <body>
 <div class="form-container">
