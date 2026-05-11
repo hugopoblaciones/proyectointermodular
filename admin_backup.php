@@ -202,6 +202,12 @@ function purgeOldBackups(): void {
     }
 }
 
+function writeLog(string $level, string $message): void {
+    if (!is_dir(BACKUP_DIR)) return;
+    $line = '[' . date('Y-m-d H:i:s') . '] [' . $level . '] ' . $message . PHP_EOL;
+    file_put_contents(BACKUP_DIR . 'backup.log', $line, FILE_APPEND | LOCK_EX);
+}
+
 // ── Acciones POST ────────────────────────────────────────────────────────────
 $msg  = '';
 $type = '';
@@ -225,6 +231,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($exitCode !== 0 || empty($sqlLines)) {
             foreach (glob($folder . '*') as $f) unlink($f);
             rmdir($folder);
+            writeLog('ERROR', "Fallo al generar dump SQL (código de salida: $exitCode)");
             $msg  = 'Error al generar el dump de la base de datos. Comprueba que mysqldump está en la ruta configurada.';
             $type = 'error';
         } else {
@@ -237,9 +244,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 addDirToZip($zip, __DIR__);
                 $zip->close();
                 purgeOldBackups();
+                writeLog('OK', "Backup creado: $ts (SQL: " . round(filesize($sqlFile)/1024, 1) . " KB, ZIP: " . round(filesize($zipFile)/1024, 1) . " KB)");
+                writeLog('OK', "Limpieza automática ejecutada (retención: " . RETENTION . " días)");
                 $msg  = "Backup <strong>$ts</strong> creado correctamente.";
                 $type = 'success';
             } else {
+                writeLog('ERROR', "SQL generado pero falló la creación del ZIP: $ts");
                 $msg  = 'SQL generado, pero falló la creación del ZIP del proyecto.';
                 $type = 'warning';
             }
@@ -254,6 +264,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (is_dir($dir)) {
                 foreach (glob($dir . '*') as $f) unlink($f);
                 rmdir($dir);
+                writeLog('OK', "Backup eliminado manualmente: $name");
                 $msg  = "Backup <strong>$name</strong> eliminado.";
                 $type = 'success';
             } else {
@@ -312,9 +323,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             if (empty($errors)) {
+                writeLog('OK', "Backup restaurado: $name");
                 $msg  = "Backup <strong>$name</strong> restaurado correctamente (BD + archivos).";
                 $type = 'success';
             } else {
+                writeLog('ERROR', "Fallo al restaurar backup $name: " . implode(' | ', array_map('strip_tags', $errors)));
                 $msg  = implode('<br>', $errors);
                 $type = 'error';
             }
@@ -635,6 +648,27 @@ td.name-col { font-size: 0.78rem; color: #8899aa; font-family: monospace; }
     font-weight: 600;
 }
 
+/* ── Log viewer ── */
+.log-viewer {
+    background: rgba(0,0,0,0.35);
+    border-radius: 10px;
+    padding: 16px 18px;
+    font-family: monospace;
+    font-size: 0.8rem;
+    max-height: 280px;
+    overflow-y: auto;
+}
+
+.log-line {
+    padding: 4px 0;
+    color: #8899aa;
+    border-bottom: 1px solid rgba(255,255,255,0.03);
+    line-height: 1.5;
+}
+
+.log-line.log-ok    { color: #6ddb93; }
+.log-line.log-error { color: #ff8fa0; }
+
 /* ── Spinner ── */
 .spinner { display: none; width: 18px; height: 18px; border: 3px solid rgba(255,255,255,0.3); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; vertical-align: middle; margin-left: 8px; }
 @keyframes spin { to { transform: rotate(360deg); } }
@@ -783,6 +817,36 @@ td.name-col { font-size: 0.78rem; color: #8899aa; font-family: monospace; }
         </div>
         <?php endif; ?>
     </div>
+</div>
+
+<!-- Log de actividad -->
+<?php
+$logFile  = BACKUP_DIR . 'backup.log';
+$logLines = [];
+if (file_exists($logFile)) {
+    $all      = file($logFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    $logLines = array_reverse(array_slice($all, -50));
+}
+?>
+<div class="action-panel">
+    <h2>Registro de actividad</h2>
+    <?php if (empty($logLines)): ?>
+    <div class="empty-state">
+        <div class="icon">&#128196;</div>
+        <p>Todavía no hay registros. El log se crea con el primer backup.</p>
+    </div>
+    <?php else: ?>
+    <div class="log-viewer">
+        <?php foreach ($logLines as $line): ?>
+        <?php
+            $cls = '';
+            if (str_contains($line, '[OK]'))    $cls = 'log-ok';
+            if (str_contains($line, '[ERROR]')) $cls = 'log-error';
+        ?>
+        <div class="log-line <?= $cls ?>"><?= htmlspecialchars($line) ?></div>
+        <?php endforeach; ?>
+    </div>
+    <?php endif; ?>
 </div>
 
 <!-- Modal restaurar -->
